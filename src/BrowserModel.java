@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 
 /**
@@ -21,6 +22,8 @@ public class BrowserModel {
     private int myCurrentIndex;
     private List<URL> myHistory;
     private Map<String, URL> myFavorites;
+    private ResourceBundle myErrorResources;
+    public static final String DEFAULT_RESOURCE_PACKAGE = "resources/";
 
 
     /**
@@ -32,28 +35,33 @@ public class BrowserModel {
         myCurrentIndex = -1;
         myHistory = new ArrayList<>();
         myFavorites = new HashMap<>();
+        myErrorResources = ResourceBundle.getBundle(DEFAULT_RESOURCE_PACKAGE + "Exception");
     }
 
     /**
      * Returns the first page in next history, null if next history is empty.
      */
-    public URL next () {
-        if (hasNext()) {
+    public URL next() {
+        try{
             myCurrentIndex++;
             return myHistory.get(myCurrentIndex);
         }
-        return null;
+        catch(BrowserException e){
+        	throw new BrowserException(String.format(myErrorResources.getString("NoNext"), null));
+        }
     }
 
     /**
      * Returns the first page in back history, null if back history is empty.
      */
     public URL back () {
-        if (hasPrevious()) {
+        try{
             myCurrentIndex--;
             return myHistory.get(myCurrentIndex);
         }
-        return null;
+        catch(Exception e){
+        	throw new BrowserException(String.format(myErrorResources.getString("NoBack"), null));
+        }
     }
 
     /**
@@ -76,7 +84,7 @@ public class BrowserModel {
             return myCurrentURL;
         }
         catch (Exception e) {
-            return null;
+            throw new BrowserException(String.format(myErrorResources.getString("ErrorOnGo"), url));
         }
     }
 

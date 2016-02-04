@@ -19,6 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -61,6 +62,7 @@ public class BrowserView {
     private Button myBackButton;
     private Button myNextButton;
     private Button myHomeButton;
+    private Button myFavoritesButton;
     // favorites
     private ComboBox<String> myFavorites;
     // get strings from resource file
@@ -91,12 +93,12 @@ public class BrowserView {
      * Display given URL.
      */
     public void showPage (String url) {
-        URL valid = myModel.go(url);
-        if (valid != null) {
+    	try{
+    		URL valid = myModel.go(url);
             update(valid);
         }
-        else {
-            showError("Could not load " + url);
+        catch(BrowserException e){
+            showError(e.getMessage());
         }
     }
 
@@ -143,7 +145,7 @@ public class BrowserView {
     private void showFavorite (String favorite) {
         showPage(myModel.getFavorite(favorite).toString());
         // reset favorites ComboBox so the same choice can be made again
-        myFavorites.setValue(null);
+        // myFavorites.setValue(null);
     }
 
     // update just the view to display given URL
@@ -169,8 +171,18 @@ public class BrowserView {
 
     // only enable buttons when useful to user
     private void enableButtons () {
-        myBackButton.setDisable(! myModel.hasPrevious());
-        myNextButton.setDisable(! myModel.hasNext());
+    	try{
+    		myBackButton.setDisable(! myModel.hasPrevious());
+    	}
+    	catch(BrowserException e){
+    		showError(e.getMessage());
+    	}
+    	try{
+    		myNextButton.setDisable(! myModel.hasNext());
+    	}
+    	catch(BrowserException e){
+    		showError(e.getMessage());
+    	}
         myHomeButton.setDisable(myModel.getHome() == null);
     }
 
@@ -213,6 +225,8 @@ public class BrowserView {
         result.getChildren().add(myNextButton);
         myHomeButton = makeButton("HomeCommand", event -> home());
         result.getChildren().add(myHomeButton);
+        myFavoritesButton=makeButton("AddFavoriteCommand", e->addFavorite());
+        result.getChildren().add(myFavoritesButton);
         // if user presses button or enter in text field, load/show the URL
         EventHandler<ActionEvent> showHandler = new ShowPage();
         result.getChildren().add(makeButton("GoCommand", showHandler));
@@ -224,12 +238,25 @@ public class BrowserView {
     // make buttons for setting favorites/home URLs
     private Node makePreferencesPanel () {
         HBox result = new HBox();
+        result.setPrefWidth(200);
         myFavorites = new ComboBox<String>();
+        myFavorites.setPrefWidth(100);
         // ADD REST OF CODE HERE
         result.getChildren().add(makeButton("SetHomeCommand", event -> {
             myModel.setHome();
             enableButtons();
         }));
+        result.getChildren().add(myFavorites);
+        myFavorites.setOnAction(event -> showFavorite(myFavorites.getValue()));
+        /**
+        myFavorites.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>(){
+    		@Override
+			public void handle(MouseEvent event) {
+    			showFavorite(myFavorites.getValue());
+    		}
+        });
+        **/
+        
         return result;
     }
 
